@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>MOC Truppenrechner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #fff;
+      color: #000;
+    }
+    h1 {
+      text-align: center;
+    }
+    .lang-select {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+    .refresh-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: none;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 200px;
+      padding: 5px;
+      margin-top: 5px;
+    }
+    input[readonly] {
+      background: #f0f0f0;
+    }
+    .tooltip {
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 1px solid #ccc;
+      padding: 20px;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .popup img {
+      max-width: 300px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .popup button {
+      margin-top: 10px;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .calc-btn {
+      background: green;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .reset-btn {
+      background: red;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <select id="lang" class="lang-select" onchange="setLang(this.value)">
+    <option value="de">🇩🇪 Deutsch</option>
+    <option value="en">🇬🇧 English</option>
+    <option value="fr">🇫🇷 Français</option>
+    <option value="it">🇮🇹 Italiano</option>
+    <option value="ar">🇦🇪 العربية</option>
+  </select>
+  <button class="refresh-btn" onclick="location.reload()">🔄</button>
+
+  <h1 id="title">MOC Truppenrechner</h1>
+
+  <form id="calcForm">
+    <label id="lbl-truppen">Anzahl Truppen</label>
+    <input type="number" id="truppen" />
+
+    <label id="lbl-maersche">Anzahl Märsche</label>
+    <input type="number" id="maersche" />
+
+    <label id="lbl-haustier">Haustier Buff
+      <span class="tooltip" onclick="showPopup('pet')">ℹ️</span>
+    </label>
+    <input type="number" id="haustier" />
+
+    <label id="lbl-cyril">Cyrille Buff
+      <span class="tooltip" onclick="showPopup('cyril')">ℹ️</span>
+    </label>
+    <input type="number" id="cyril" />
+
+    <label id="lbl-schwadron">Schwadronen Grösse</label>
+    <input type="number" id="schwadron" />
+
+    <label id="lbl-zw1">Anzahl Truppen pro Marsch</label>
+    <input type="number" id="zw1" readonly />
+
+    <label id="lbl-zw2">Totale Schwadronengrösse</label>
+    <input type="number" id="zw2" readonly />
+
+    <label id="lbl-result">Endergebnis (%)</label>
+    <input type="text" id="result" readonly />
+  </form>
+
+  <div class="buttons">
+    <button type="button" class="calc-btn" id="btn-calc" onclick="calculate()">Berechnen</button>
+    <button type="button" class="reset-btn" id="btn-reset" onclick="document.getElementById('calcForm').reset();">Zurücksetzen</button>
+  </div>
+
+  <!-- Popups -->
+  <div id="popup-pet" class="popup">
+    <img src="Haustierbuff.jpg" alt="Haustier Buff">
+    <p id="pet-text">Haustier Buff: Verstärkt die Armee und erhöht die Kapazität.</p>
+    <button onclick="closePopup('pet')">OK</button>
+  </div>
+
+  <div id="popup-cyril" class="popup">
+    <img src="Cyrille Buff.jpg" alt="Cyrille Buff">
+    <p id="cyril-text">Cyrille Buff: Erhöht die Truppenkapazität in bestimmten Events.</p>
+    <button onclick="closePopup('cyril')">OK</button>
+  </div>
+
+  <script>
+    const dict = {
+      de: {
+        title: "MOC Truppenrechner",
+        labels: {
+          truppen: "Anzahl Truppen",
+          maersche: "Anzahl Märsche",
+          haustier: "Haustier Buff",
+          cyril: "Cyrille Buff",
+          schwadron: "Schwadronen Grösse",
+          zw1: "Anzahl Truppen pro Marsch",
+          zw2: "Totale Schwadronengrösse",
+          result: "Endergebnis (%)"
+        },
+        buttons: { calc: "Berechnen", reset: "Zurücksetzen" },
+        pet: "Haustier Buff: Verstärkt die Armee und erhöht die Kapazität.",
+        cyrilText: "Cyrille Buff: Erhöht die Truppenkapazität in bestimmten Events."
+      },
+      en: {
+        title: "MOC Troop Calculator",
+        labels: {
+          truppen: "Number of Troops",
+          maersche: "Number of Marches",
+          haustier: "Pet Buff",
+          cyril: "Cyrille Buff",
+          schwadron: "Squad Size",
+          zw1: "Troops per March",
+          zw2: "Total Squad Size",
+          result: "Final Result (%)"
+        },
+        buttons: { calc: "Calculate", reset: "Reset" },
+        pet: "Pet Buff: Strengthens the army and increases capacity.",
+        cyrilText: "Cyrille Buff: Increases troop capacity in certain events."
+      },
+      fr: {
+        title: "Calculateur de troupes MOC",
+        labels: {
+          truppen: "Nombre de troupes",
+          maersche: "Nombre de marches",
+          haustier: "Bonus animal de compagnie",
+          cyril: "Bonus Cyrille",
+          schwadron: "Taille de l'escadron",
+          zw1: "Troupes par marche",
+          zw2: "Taille totale de l'escadron",
+          result: "Résultat final (%)"
+        },
+        buttons: { calc: "Calculer", reset: "Réinitialiser" },
+        pet: "Bonus animal de compagnie : Renforce l'armée et augmente la capacité.",
+        cyrilText: "Bonus Cyrille : Augmente la capacité des troupes lors de certains événements."
+      },
+      it: {
+        title: "Calcolatore truppe MOC",
+        labels: {
+          truppen: "Numero di truppe",
+          maersche: "Numero di marce",
+          haustier: "Bonus animale domestico",
+          cyril: "Bonus Cyrille",
+          schwadron: "Dimensione della squadra",
+          zw1: "Truppe per marcia",
+          zw2: "Dimensione totale della squadra",
+          result: "Risultato finale (%)"
+        },
+        buttons: { calc: "Calcola", reset: "Reimposta" },
+        pet: "Bonus animale domestico: Rafforza l'esercito e aumenta la capacità.",
+        cyrilText: "Bonus Cyrille: Aumenta la capacità delle truppe in determinati eventi."
+      },
+      ar: {
+        title: "حاسبة قوات MOC",
+        labels: {
+          truppen: "عدد القوات",
+          maersche: "عدد المسيرات",
+          haustier: "تعزيز الحيوان الأليف",
+          cyril: "تعزيز سيريل",
+          schwadron: "حجم السرب",
+          zw1: "عدد القوات لكل مسيرة",
+          zw2: "إجمالي حجم السرب",
+          result: "النتيجة النهائية (%)"
+        },
+        buttons: { calc: "احسب", reset: "إعادة تعيين" },
+        pet: "تعزيز الحيوان الأليف: يقوي الجيش ويزيد السعة.",
+        cyrilText: "تعزيز سيريل: يزيد من سعة القوات في أحداث معينة."
+      }
+    };
+
+    function setLang(lang) {
+      const d = dict[lang];
+      document.getElementById('title').innerText = d.title;
+      document.getElementById('lbl-truppen').innerText = d.labels.truppen;
+      document.getElementById('lbl-maersche').innerText = d.labels.maersche;
+      document.getElementById('lbl-haustier').childNodes[0].nodeValue = d.labels.haustier + " ";
+      document.getElementById('lbl-cyril').childNodes[0].nodeValue = d.labels.cyril + " ";
+      document.getElementById('lbl-schwadron').innerText = d.labels.schwadron;
+      document.getElementById('lbl-zw1').innerText = d.labels.zw1;
+      document.getElementById('lbl-zw2').innerText = d.labels.zw2;
+      document.getElementById('lbl-result').innerText = d.labels.result;
+      document.getElementById('btn-calc').innerText = d.buttons.calc;
+      document.getElementById('btn-reset').innerText = d.buttons.reset;
+      document.getElementById('pet-text').innerText = d.pet;
+      document.getElementById('cyril-text').innerText = d.cyrilText;
+      document.body.dir = (lang === "ar") ? "rtl" : "ltr";
+    }
+
+    function calculate() {
+      const truppen = parseFloat(document.getElementById('truppen').value) || 0;
+      const maersche = parseFloat(document.getElementById('maersche').value) || 1;
+      const haustier = parseFloat(document.getElementById('haustier').value) || 0;
+      const cyril = parseFloat(document.getElementById('cyril').value) || 0;
+      const schwadron = parseFloat(document.getElementById('schwadron').value) || 0;
+
+      const zw1 = truppen / maersche;
+      document.getElementById('zw1').value = zw1.toFixed(2);
+
+      const zw2 = haustier + cyril + schwadron;
+      document.getElementById('zw2').value = zw2.toFixed(2);
+
+      const result = (100 / zw2) * zw1;
+      document.getElementById('result').value = result.toFixed(2) + "%";
+    }
+
+    function showPopup(which) {
+      document.getElementById('popup-' + which).style.display = 'block';
+    }
+    function closePopup(which) {
+      document.getElementById('popup-' + which).style.display = 'none';
+    }
+
+    // Standard auf Deutsch setzen
+    setLang('de');
+  </script>
+</body>
+</html>
